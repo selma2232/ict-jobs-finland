@@ -1,0 +1,86 @@
+import type { Job } from "../types/job";
+
+export const mockJobs: Job[] = [
+  {
+    id: "1",
+    title: "Junior Web Developer",
+    companyId: "Example Tech",
+    location: "Helsinki",
+    workMode: "Hybrid",
+    description:
+      "Etsimme junior-kehittäjää työskentelemään modernien web-sovellusten parissa.",
+    technologies: ["React", "TypeScript", "Node.js"],
+    jobType: "full-time",
+    experienceLevel: "junior",
+    salary: "3 000–3 500 €/kk",
+    publishedAt: "2026-08-25",
+  },
+  {
+    id: "2",
+    title: "Frontend Developer Trainee",
+    companyId: "digital-solutions",
+    location: "Espoo",
+    workMode: "Hybrid",
+    description:
+      "Trainee-ohjelma opiskelijoille ja uransa alkuvaiheessa oleville kehittäjille.",
+    technologies: ["React", "JavaScript", "Git"],
+    jobType: "trainee",
+    experienceLevel: "entry-level",
+    salary: "2 500–3 000 €/kk",
+    publishedAt: "2026-08-24",
+  },
+  {
+    id: "3",
+    title: "ICT-harjoittelija",
+    companyId: "nordic-systems",
+    location: "Vantaa",
+    workMode: "On-site",
+    description:
+      "ICT-alan harjoittelupaikka AMK-opiskelijalle. Tehtäviin kuuluu IT-tukea ja käyttäjähallintaa.",
+    technologies: ["Microsoft 365", "Windows", "Active Directory"],
+    jobType: "internship-amk",
+    experienceLevel: "internship",
+    publishedAt: "2026-08-23",
+  },
+  {
+    id: "4",
+    title: "IT Support -harjoittelija",
+    companyId: "helsinki-digital",
+    location: "Helsinki",
+    workMode: "On-site",
+    description:
+      "Työssäoppimispaikka datanomiopiskelijalle. Pääset tekemään käytännön IT-tukitehtäviä.",
+    technologies: ["Windows", "Microsoft 365", "IT Support"],
+    jobType: "internship-vocational",
+    experienceLevel: "internship",
+    publishedAt: "2026-08-22",
+  },
+  {
+    id: "5",
+    title: "Junior Backend Developer",
+    companyId: "cloud-nordic",
+    location: "Helsinki",
+    workMode: "Remote",
+    description:
+      "Junior backend-kehittäjä työskentelemään Node.js- ja PostgreSQL-projektien parissa.",
+    technologies: ["Node.js", "TypeScript", "PostgreSQL"],
+    jobType: "full-time",
+    experienceLevel: "junior",
+    salary: "3 200–3 800 €/kk",
+    publishedAt: "2026-08-21",
+  },
+  {
+    id: "6",
+    title: "Software Developer Summer Trainee",
+    companyId: "Tech Finland",
+    location: "Tampere",
+    workMode: "Hybrid",
+    description:
+      "Kesätyöpaikka ohjelmistokehityksestä kiinnostuneelle opiskelijalle.",
+    technologies: ["Python", "React", "Git"],
+    jobType: "summer",
+    experienceLevel: "entry-level",
+    salary: "2 800–3 200 €/kk",
+    publishedAt: "2026-08-20",
+  },
+];
