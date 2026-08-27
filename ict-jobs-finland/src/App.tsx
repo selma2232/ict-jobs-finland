@@ -5,6 +5,11 @@ import Home from "./pages/home";
 import Jobs from "./pages/jobs";
 import JobListPage from "./pages/joblistpage";
 import CompanyDetails from "./pages/companydetails";
+import Profile from "./pages/profile";
+import SavedJobs from "./pages/savedjobs";
+
+import Login from "./pages/login";
+import Register from "./pages/register";
 function Placeholder({ title }: { title: string }) {
   return (
     <main className="mx-auto min-h-[60vh] max-w-7xl px-6 py-20">
@@ -96,6 +101,11 @@ function App() {
   path="/companies/:id"
   element={<CompanyDetails />}
 />
+<Route path="/profile" element={<Profile />} />
+<Route path="/saved-jobs" element={<SavedJobs />} />
+<Route path="/login" element={<Login />} />
+
+<Route path="/register" element={<Register />} />
           </Routes>
         </div>
 

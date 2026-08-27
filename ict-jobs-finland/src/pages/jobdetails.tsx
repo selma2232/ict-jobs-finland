@@ -1,12 +1,30 @@
 import { Link, useParams } from "react-router-dom";
+import { useState } from "react";
 import { mockJobs } from "../data/mockJobs";
 import { mockCompanies } from "../data/mockcompanies";
+import JobMatch from "../components/jobmatch";
+import type { UserProfile } from "../types/profile";
 
 function JobDetails() {
   const { id } = useParams();
+  const [saved, setSaved] = useState(() => {
+    const savedJobs = JSON.parse(
+      localStorage.getItem("savedJobs") || "[]"
+    ) as string[];
+
+    return savedJobs.includes(id || "");
+  });
 
   const job = mockJobs.find((item) => item.id === id);
   const company = mockCompanies.find((item) => item.id === job?.companyId);
+  const demoProfile: UserProfile = {
+    name: "Demo User",
+    educationLevel: "amk",
+    field: "Tieto- ja viestintätekniikka",
+    location: "Helsinki",
+    skills: ["React", "TypeScript", "Node.js"],
+    interests: ["junior", "amk"],
+  };
 
   if (!job) {
     return (
@@ -63,12 +81,54 @@ function JobDetails() {
             </div>
 
             <div>
-              <button
-                type="button"
-                className="w-full rounded-lg bg-gray-900 px-8 py-3 font-semibold text-white transition hover:bg-gray-800 md:w-auto"
-              >
-                Hae työpaikkaa
-              </button>
+             <div className="flex flex-col gap-3 sm:flex-row md:flex-col">
+  <a
+    href={job.applicationUrl}
+    target="_blank"
+    rel="noreferrer"
+    className="rounded-lg bg-gray-900 px-8 py-3 text-center font-semibold text-white transition hover:bg-gray-800"
+  >
+    Hae työpaikkaa →
+  </a>
+
+  <button
+    type="button"
+    onClick={() => {
+      const savedJobs = JSON.parse(
+        localStorage.getItem("savedJobs") || "[]"
+      ) as string[];
+
+      if (!id) {
+        return;
+      }
+
+      if (savedJobs.includes(id)) {
+        const updatedJobs = savedJobs.filter(
+          (jobId) => jobId !== id
+        );
+
+        localStorage.setItem(
+          "savedJobs",
+          JSON.stringify(updatedJobs)
+        );
+
+        setSaved(false);
+      } else {
+        const updatedJobs = [...savedJobs, id];
+
+        localStorage.setItem(
+          "savedJobs",
+          JSON.stringify(updatedJobs)
+        );
+
+        setSaved(true);
+      }
+    }}
+    className="rounded-lg border border-gray-300 px-8 py-3 font-semibold text-gray-700 transition hover:bg-gray-50"
+  >
+    {saved ? "★ Tallennettu" : "☆ Tallenna työpaikka"}
+  </button>
+</div>
             </div>
           </div>
 
@@ -88,6 +148,8 @@ function JobDetails() {
               ))}
             </div>
           </div>
+
+          <JobMatch job={job} profile={demoProfile} />
 
           <div className="mt-10 border-t border-gray-200 pt-8">
             <h2 className="text-xl font-bold text-gray-900">

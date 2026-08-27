@@ -25,4 +25,5 @@ export interface Job {
   experienceLevel: ExperienceLevel;
   salary?: string;
   publishedAt: string;
+  applicationUrl: string;
 }

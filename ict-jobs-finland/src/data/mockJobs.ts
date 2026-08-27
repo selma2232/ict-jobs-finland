@@ -14,6 +14,7 @@ export const mockJobs: Job[] = [
     experienceLevel: "junior",
     salary: "3 000–3 500 €/kk",
     publishedAt: "2026-08-25",
+    applicationUrl: "https://example.com/apply",
   },
   {
     id: "2",
@@ -28,6 +29,7 @@ export const mockJobs: Job[] = [
     experienceLevel: "entry-level",
     salary: "2 500–3 000 €/kk",
     publishedAt: "2026-08-24",
+    applicationUrl: "https://example.com/apply",
   },
   {
     id: "3",
@@ -41,6 +43,7 @@ export const mockJobs: Job[] = [
     jobType: "internship-amk",
     experienceLevel: "internship",
     publishedAt: "2026-08-23",
+    applicationUrl: "https://example.com/apply",
   },
   {
     id: "4",
@@ -54,6 +57,7 @@ export const mockJobs: Job[] = [
     jobType: "internship-vocational",
     experienceLevel: "internship",
     publishedAt: "2026-08-22",
+    applicationUrl: "https://example.com/apply",
   },
   {
     id: "5",
@@ -68,6 +72,7 @@ export const mockJobs: Job[] = [
     experienceLevel: "junior",
     salary: "3 200–3 800 €/kk",
     publishedAt: "2026-08-21",
+    applicationUrl: "https://example.com/apply",
   },
   {
     id: "6",
@@ -82,5 +87,6 @@ export const mockJobs: Job[] = [
     experienceLevel: "entry-level",
     salary: "2 800–3 200 €/kk",
     publishedAt: "2026-08-20",
+    applicationUrl: "https://example.com/apply",
   },
 ];

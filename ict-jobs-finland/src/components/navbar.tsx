@@ -7,6 +7,8 @@ const navigation = [
   { name: "Ammattikoulu", path: "/jobs/ammattikoulu-harjoittelu" },
   { name: "Kesätyöt", path: "/jobs/kesatyo" },
   { name: "Trainee", path: "/jobs/trainee" },
+  { name: "Profiili", path: "/profile" },
+  { name: "Tallennetut", path: "/saved-jobs" },
 ];
 
 function Navbar() {
@@ -35,6 +37,12 @@ function Navbar() {
         >
           Yrityksille
         </Link>
+        <Link
+  to="/login"
+  className="text-sm font-semibold text-gray-700 hover:text-gray-900"
+>
+  Kirjaudu
+</Link>
       </div>
     </header>
   );
