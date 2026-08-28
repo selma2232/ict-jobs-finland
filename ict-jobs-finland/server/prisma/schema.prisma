@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   Profile?
+  savedJobs SavedJob[]
+}
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  educationLevel String?
+  field          String?
+  location       String?
+  skills         String[]
+  interests      String[]
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Company {
+  id          String  @id @default(cuid())
+  name        String
+  description String
+  location    String
+  website     String?
+
+  jobs Job[]
+}
+
+model Job {
+  id              String   @id @default(cuid())
+  title           String
+  companyId       String
+  location        String
+  workMode        String
+  description     String
+  technologies    String[]
+  jobType         String
+  experienceLevel String
+  salary          String?
+  applicationUrl  String
+  publishedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  savedJobs SavedJob[]
+}
+
+model SavedJob {
+  id        String   @id @default(cuid())
+  userId    String
+  jobId     String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, jobId])
+}
