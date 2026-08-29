@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function Login() {
@@ -7,27 +7,56 @@ function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    const storedUser = localStorage.getItem("user");
+    setError("");
+    setLoading(true);
 
-    if (!storedUser) {
-      setError("Käyttäjää ei löytynyt. Luo ensin tili.");
-      return;
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/auth/login",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.trim(),
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message || "Sähköposti tai salasana on väärin."
+        );
+        return;
+      }
+
+      // Tallennetaan kirjautumistiedot
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      localStorage.setItem("isLoggedIn", "true");
+
+      // Ilmoitetaan muille komponenteille kirjautumisesta
+      window.dispatchEvent(new Event("authChanged"));
+
+      navigate("/profile");
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setError(
+        "Palvelimeen ei saatu yhteyttä. Varmista, että backend on käynnissä."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    const user = JSON.parse(storedUser);
-
-    if (user.email !== email || user.password !== password) {
-      setError("Sähköposti tai salasana on väärin.");
-      return;
-    }
-
-    localStorage.setItem("isLoggedIn", "true");
-
-    navigate("/profile");
   };
 
   return (
@@ -50,13 +79,18 @@ function Login() {
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
             <div>
-              <label className="text-sm font-semibold text-gray-700">
+              <label
+                htmlFor="email"
+                className="text-sm font-semibold text-gray-700"
+              >
                 Sähköposti
               </label>
 
               <input
+                id="email"
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 className="mt-2 h-11 w-full rounded-lg border border-gray-300 px-4 outline-none focus:border-gray-500"
@@ -65,13 +99,18 @@ function Login() {
             </div>
 
             <div>
-              <label className="text-sm font-semibold text-gray-700">
+              <label
+                htmlFor="password"
+                className="text-sm font-semibold text-gray-700"
+              >
                 Salasana
               </label>
 
               <input
+                id="password"
                 type="password"
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
                 className="mt-2 h-11 w-full rounded-lg border border-gray-300 px-4 outline-none focus:border-gray-500"
@@ -80,9 +119,10 @@ function Login() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-gray-900 px-5 py-3 font-semibold text-white hover:bg-gray-800"
+              disabled={loading}
+              className="w-full rounded-lg bg-gray-900 px-5 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Kirjaudu
+              {loading ? "Kirjaudutaan..." : "Kirjaudu"}
             </button>
           </form>
 

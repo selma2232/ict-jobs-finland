@@ -1,16 +1,51 @@
 import { Link, useParams } from "react-router-dom";
-import { mockCompanies } from "../data/mockcompanies";
-import { mockJobs } from "../data/mockJobs";
+import { useEffect, useState } from "react";
 import JobCard from "../components/jobcard";
 
 function CompanyDetails() {
   const { id } = useParams();
 
-  const company = mockCompanies.find(
-    (item) => item.id === id
-  );
+  const [company, setCompany] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  if (!company) {
+  useEffect(() => {
+    const fetchCompany = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:3000/api/companies/${id}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Company not found");
+        }
+
+        const data = await response.json();
+        setCompany(data);
+      } catch (error) {
+        console.error(error);
+        setError("Yrityksen lataaminen epäonnistui.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchCompany();
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <main className="mx-auto min-h-[60vh] max-w-5xl px-6 py-20">
+        <p className="text-gray-600">
+          Ladataan yrityksen tietoja...
+        </p>
+      </main>
+    );
+  }
+
+  if (error || !company) {
     return (
       <main className="mx-auto min-h-[60vh] max-w-5xl px-6 py-20">
         <h1 className="text-3xl font-bold text-gray-900">
@@ -18,7 +53,7 @@ function CompanyDetails() {
         </h1>
 
         <p className="mt-3 text-gray-600">
-          Tätä yritystä ei löytynyt.
+          Tätä yritystä ei löytynyt tai se on poistettu.
         </p>
 
         <Link
@@ -31,9 +66,7 @@ function CompanyDetails() {
     );
   }
 
-  const companyJobs = mockJobs.filter(
-    (job) => job.companyId === company.id
-  );
+  const companyJobs = company.jobs || [];
 
   return (
     <main className="bg-gray-50">
@@ -96,7 +129,7 @@ function CompanyDetails() {
           </div>
 
           <div className="mt-5 space-y-4">
-            {companyJobs.map((job) => (
+            {companyJobs.map((job: any) => (
               <JobCard key={job.id} job={job} />
             ))}
 

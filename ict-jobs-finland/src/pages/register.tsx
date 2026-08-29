@@ -1,4 +1,4 @@
-import { FormEvent, useState } from "react";
+import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 function Register() {
@@ -8,28 +8,50 @@ function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
 
-    const existingUser = localStorage.getItem("user");
+    setError("");
+    setLoading(true);
 
-    if (existingUser) {
-      setError("Käyttäjä on jo olemassa.");
-      return;
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/auth/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(
+          data.message || "Rekisteröityminen epäonnistui."
+        );
+        return;
+      }
+
+      // Rekisteröinti onnistui.
+      // Kirjaudutaan seuraavaksi sisään login-sivulla.
+      navigate("/login");
+    } catch (error) {
+      console.error(error);
+      setError(
+        "Palvelimeen ei saatu yhteyttä. Varmista, että backend on käynnissä."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    const user = {
-      id: crypto.randomUUID(),
-      name,
-      email,
-      password,
-    };
-
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("isLoggedIn", "true");
-
-    navigate("/profile");
   };
 
   return (
@@ -97,9 +119,10 @@ function Register() {
 
             <button
               type="submit"
-              className="w-full rounded-lg bg-gray-900 px-5 py-3 font-semibold text-white hover:bg-gray-800"
+              disabled={loading}
+              className="w-full rounded-lg bg-gray-900 px-5 py-3 font-semibold text-white transition hover:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              Luo tili
+              {loading ? "Luodaan tiliä..." : "Luo tili"}
             </button>
           </form>
 

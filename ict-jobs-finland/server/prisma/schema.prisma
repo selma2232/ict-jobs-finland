@@ -8,13 +8,12 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String     @id @default(cuid())
   name      String
-  email     String   @unique
+  email     String     @unique
   password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
   profile   Profile?
   savedJobs SavedJob[]
 }
@@ -27,8 +26,7 @@ model Profile {
   location       String?
   skills         String[]
   interests      String[]
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Company {
@@ -37,12 +35,11 @@ model Company {
   description String
   location    String
   website     String?
-
-  jobs Job[]
+  jobs        Job[]
 }
 
 model Job {
-  id              String   @id @default(cuid())
+  id              String     @id @default(cuid())
   title           String
   companyId       String
   location        String
@@ -53,12 +50,11 @@ model Job {
   experienceLevel String
   salary          String?
   applicationUrl  String
-  publishedAt     DateTime @default(now())
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  company   Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  savedJobs SavedJob[]
+  publishedAt     DateTime   @default(now())
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  company         Company    @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  savedJobs       SavedJob[]
 }
 
 model SavedJob {
@@ -66,9 +62,8 @@ model SavedJob {
   userId    String
   jobId     String
   createdAt DateTime @default(now())
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  job  Job  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, jobId])
 }

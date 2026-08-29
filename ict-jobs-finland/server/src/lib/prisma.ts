@@ -1,12 +1,8 @@
-import "dotenv/config";
 import { PrismaClient } from "../generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
-const connectionString = process.env.DATABASE_URL;
-
-if (!connectionString) {
-  throw new Error("DATABASE_URL is not defined");
-}
+const connectionString =
+  "postgresql://postgres:postgres@localhost:51214/template1";
 
 const adapter = new PrismaPg({
   connectionString,
