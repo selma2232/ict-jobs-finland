@@ -1,4 +1,9 @@
-import { useEffect, useState } from "react";
+import {
+  type FormEvent,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useNavigate } from "react-router-dom";
 
 const availableSkills = [
@@ -19,7 +24,10 @@ const availableSkills = [
 const interestOptions = [
   { value: "junior", label: "Junior / Entry-level" },
   { value: "amk", label: "AMK-harjoittelu" },
-  { value: "vocational", label: "Ammattikoulun harjoittelu" },
+  {
+    value: "vocational",
+    label: "Ammattikoulun harjoittelu",
+  },
   { value: "summer", label: "Kesätyö" },
   { value: "trainee", label: "Trainee" },
 ];
@@ -36,8 +44,88 @@ function Profile() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  /*
+   * ----------------------------------------
+   * PROFIILIN VALMIUSASTE
+   * ----------------------------------------
+   */
+
+  const profileCompletion = useMemo(() => {
+    const sections = [
+      Boolean(name.trim()),
+      Boolean(educationLevel),
+      Boolean(field.trim()),
+      Boolean(location.trim()),
+      skills.length > 0,
+      interests.length > 0,
+    ];
+
+    const completed = sections.filter(Boolean).length;
+
+    return Math.round(
+      (completed / sections.length) * 100
+    );
+  }, [
+    name,
+    educationLevel,
+    field,
+    location,
+    skills,
+    interests,
+  ]);
+
+  /*
+   * ----------------------------------------
+   * PUUTTUVAT PROFIILITIEDOT
+   * ----------------------------------------
+   */
+
+  const missingProfileItems = useMemo(() => {
+    const missing: string[] = [];
+
+    if (!name.trim()) {
+      missing.push("nimi");
+    }
+
+    if (!educationLevel) {
+      missing.push("koulutustaso");
+    }
+
+    if (!field.trim()) {
+      missing.push("ala");
+    }
+
+    if (!location.trim()) {
+      missing.push("sijainti");
+    }
+
+    if (skills.length === 0) {
+      missing.push("osaaminen");
+    }
+
+    if (interests.length === 0) {
+      missing.push("kiinnostuksen kohteet");
+    }
+
+    return missing;
+  }, [
+    name,
+    educationLevel,
+    field,
+    location,
+    skills,
+    interests,
+  ]);
+
+  /*
+   * ----------------------------------------
+   * LADATAAN PROFIILI
+   * ----------------------------------------
+   */
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -64,19 +152,26 @@ function Profile() {
 
         if (!response.ok) {
           throw new Error(
-            data.message || "Profiilin lataaminen epäonnistui."
+            data.message ||
+              "Profiilin lataaminen epäonnistui."
           );
         }
 
         setName(data.name || "");
-        setEducationLevel(data.profile?.educationLevel || "");
+
+        setEducationLevel(
+          data.profile?.educationLevel || ""
+        );
+
         setField(data.profile?.field || "");
         setLocation(data.profile?.location || "");
+
         setSkills(
           Array.isArray(data.profile?.skills)
             ? data.profile.skills
             : []
         );
+
         setInterests(
           Array.isArray(data.profile?.interests)
             ? data.profile.interests
@@ -96,6 +191,17 @@ function Profile() {
     loadProfile();
   }, [navigate]);
 
+  /*
+   * ----------------------------------------
+   * APUTOIMINNOT
+   * ----------------------------------------
+   */
+
+  const clearMessages = () => {
+    setError("");
+    setSuccess("");
+  };
+
   const toggleSkill = (skill: string) => {
     setSkills((current) =>
       current.includes(skill)
@@ -103,8 +209,7 @@ function Profile() {
         : [...current, skill]
     );
 
-    setError("");
-    setSuccess("");
+    clearMessages();
   };
 
   const toggleInterest = (interest: string) => {
@@ -114,12 +219,22 @@ function Profile() {
         : [...current, interest]
     );
 
-    setSuccess("");
+    clearMessages();
   };
+
+  /*
+   * ----------------------------------------
+   * VALIDATION
+   * ----------------------------------------
+   */
 
   const validateProfile = () => {
     if (!name.trim()) {
       return "Lisää nimesi.";
+    }
+
+    if (name.trim().length < 2) {
+      return "Nimen täytyy olla vähintään 2 merkkiä pitkä.";
     }
 
     if (!educationLevel) {
@@ -130,8 +245,16 @@ function Profile() {
       return "Lisää ala, jota opiskelet tai jolla haluat työskennellä.";
     }
 
+    if (field.trim().length < 2) {
+      return "Alan nimi on liian lyhyt.";
+    }
+
     if (!location.trim()) {
       return "Lisää sijaintisi.";
+    }
+
+    if (location.trim().length < 2) {
+      return "Sijainnin nimi on liian lyhyt.";
     }
 
     if (skills.length === 0) {
@@ -145,8 +268,14 @@ function Profile() {
     return "";
   };
 
+  /*
+   * ----------------------------------------
+   * TALLENNUS
+   * ----------------------------------------
+   */
+
   const handleSubmit = async (
-    event: React.FormEvent<HTMLFormElement>
+    event: FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
 
@@ -157,6 +286,12 @@ function Profile() {
 
     if (validationError) {
       setError(validationError);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
+
       return;
     }
 
@@ -167,6 +302,26 @@ function Profile() {
       return;
     }
 
+    /*
+     * Siivotaan tiedot ennen backendille lähettämistä.
+     */
+
+    const cleanSkills = Array.from(
+      new Set(
+        skills
+          .map((skill) => skill.trim())
+          .filter(Boolean)
+      )
+    );
+
+    const cleanInterests = Array.from(
+      new Set(
+        interests
+          .map((interest) => interest.trim())
+          .filter(Boolean)
+      )
+    );
+
     setSaving(true);
 
     try {
@@ -174,17 +329,19 @@ function Profile() {
         "http://localhost:3000/api/profile",
         {
           method: "PUT",
+
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
+
           body: JSON.stringify({
             name: name.trim(),
             educationLevel,
             field: field.trim(),
             location: location.trim(),
-            skills,
-            interests,
+            skills: cleanSkills,
+            interests: cleanInterests,
           }),
         }
       );
@@ -193,11 +350,51 @@ function Profile() {
 
       if (!response.ok) {
         throw new Error(
-          data.message || "Profiilin tallennus epäonnistui."
+          data.message ||
+            "Profiilin tallennus epäonnistui."
         );
       }
 
-      setSuccess("Profiili tallennettu onnistuneesti.");
+      setSkills(cleanSkills);
+      setInterests(cleanInterests);
+
+      /*
+       * Päivitetään localStoragen käyttäjän nimi,
+       * jotta Navbar näyttää uuden nimen heti.
+       */
+
+      const storedUser =
+        localStorage.getItem("user");
+
+      if (storedUser) {
+        try {
+          const currentUser =
+            JSON.parse(storedUser);
+
+          const updatedUser = {
+            ...currentUser,
+            name: name.trim(),
+          };
+
+          localStorage.setItem(
+            "user",
+            JSON.stringify(updatedUser)
+          );
+
+          window.dispatchEvent(
+            new Event("authChanged")
+          );
+        } catch (error) {
+          console.error(
+            "Failed to update local user:",
+            error
+          );
+        }
+      }
+
+      setSuccess(
+        "Profiili tallennettu onnistuneesti."
+      );
 
       window.scrollTo({
         top: 0,
@@ -211,10 +408,21 @@ function Profile() {
           ? error.message
           : "Profiilin tallennus epäonnistui."
       );
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      });
     } finally {
       setSaving(false);
     }
   };
+
+  /*
+   * ----------------------------------------
+   * LOADING
+   * ----------------------------------------
+   */
 
   if (loading) {
     return (
@@ -233,21 +441,69 @@ function Profile() {
   return (
     <main className="min-h-screen bg-gray-50">
       <div className="mx-auto max-w-4xl px-6 py-12">
+        {/* HEADER */}
+
         <div>
           <h1 className="text-4xl font-bold tracking-tight text-gray-900">
             Profiilini
           </h1>
 
           <p className="mt-3 text-gray-600">
-            Kerro osaamisestasi ja kiinnostuksistasi, jotta löydämme
-            sinulle sopivampia ICT-työpaikkoja.
+            Kerro osaamisestasi ja kiinnostuksistasi,
+            jotta löydämme sinulle sopivampia
+            ICT-työpaikkoja.
           </p>
         </div>
+
+        {/* PROFILE COMPLETION */}
+
+        <section className="mt-6 rounded-xl border border-gray-200 bg-white p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-gray-900">
+                Profiilin valmius
+              </h2>
+
+              <p className="mt-1 text-sm text-gray-500">
+                Täydempi profiili auttaa löytämään
+                sinulle paremmin sopivia työpaikkoja.
+              </p>
+            </div>
+
+            <span className="text-xl font-bold text-gray-900">
+              {profileCompletion}%
+            </span>
+          </div>
+
+          <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-gray-100">
+            <div
+              className="h-full rounded-full bg-gray-900 transition-all duration-500"
+              style={{
+                width: `${profileCompletion}%`,
+              }}
+            />
+          </div>
+
+          {profileCompletion === 100 ? (
+            <p className="mt-3 text-sm font-medium text-green-700">
+              ✓ Profiilisi on valmis.
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-gray-500">
+              Puuttuu:{" "}
+              {missingProfileItems.join(", ")}.
+            </p>
+          )}
+        </section>
+
+        {/* ERROR */}
 
         {error && (
           <div className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4">
             <div className="flex items-start gap-3">
-              <span className="font-bold text-red-600">!</span>
+              <span className="font-bold text-red-600">
+                !
+              </span>
 
               <p className="text-sm font-medium text-red-700">
                 {error}
@@ -256,10 +512,14 @@ function Profile() {
           </div>
         )}
 
+        {/* SUCCESS */}
+
         {success && (
           <div className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4">
             <div className="flex items-start gap-3">
-              <span className="font-bold text-green-600">✓</span>
+              <span className="font-bold text-green-600">
+                ✓
+              </span>
 
               <p className="text-sm font-medium text-green-700">
                 {success}
@@ -280,8 +540,8 @@ function Profile() {
             </h2>
 
             <p className="mt-2 text-sm text-gray-500">
-              Näitä tietoja käytetään työpaikkojen sopivuuden
-              arvioinnissa.
+              Näitä tietoja käytetään työpaikkojen
+              sopivuuden arvioinnissa.
             </p>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
@@ -290,17 +550,17 @@ function Profile() {
                   htmlFor="name"
                   className="text-sm font-semibold text-gray-700"
                 >
-                  Nimi
+                  Nimi *
                 </label>
 
                 <input
                   id="name"
                   type="text"
                   value={name}
+                  maxLength={100}
                   onChange={(event) => {
                     setName(event.target.value);
-                    setError("");
-                    setSuccess("");
+                    clearMessages();
                   }}
                   placeholder="Nimesi"
                   className="mt-2 h-11 w-full rounded-lg border border-gray-300 px-4 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
@@ -312,16 +572,18 @@ function Profile() {
                   htmlFor="educationLevel"
                   className="text-sm font-semibold text-gray-700"
                 >
-                  Koulutustaso
+                  Koulutustaso *
                 </label>
 
                 <select
                   id="educationLevel"
                   value={educationLevel}
                   onChange={(event) => {
-                    setEducationLevel(event.target.value);
-                    setError("");
-                    setSuccess("");
+                    setEducationLevel(
+                      event.target.value
+                    );
+
+                    clearMessages();
                   }}
                   className="mt-2 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
                 >
@@ -329,13 +591,18 @@ function Profile() {
                     Valitse koulutustaso
                   </option>
 
-                  <option value="amk">AMK</option>
+                  <option value="amk">
+                    AMK
+                  </option>
+
                   <option value="vocational">
                     Ammattikoulu
                   </option>
+
                   <option value="university">
                     Yliopisto
                   </option>
+
                   <option value="graduated">
                     Valmistunut
                   </option>
@@ -347,17 +614,17 @@ function Profile() {
                   htmlFor="field"
                   className="text-sm font-semibold text-gray-700"
                 >
-                  Ala
+                  Ala *
                 </label>
 
                 <input
                   id="field"
                   type="text"
                   value={field}
+                  maxLength={100}
                   onChange={(event) => {
                     setField(event.target.value);
-                    setError("");
-                    setSuccess("");
+                    clearMessages();
                   }}
                   placeholder="Esim. Tieto- ja viestintätekniikka"
                   className="mt-2 h-11 w-full rounded-lg border border-gray-300 px-4 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
@@ -369,17 +636,20 @@ function Profile() {
                   htmlFor="location"
                   className="text-sm font-semibold text-gray-700"
                 >
-                  Sijainti
+                  Sijainti *
                 </label>
 
                 <input
                   id="location"
                   type="text"
                   value={location}
+                  maxLength={100}
                   onChange={(event) => {
-                    setLocation(event.target.value);
-                    setError("");
-                    setSuccess("");
+                    setLocation(
+                      event.target.value
+                    );
+
+                    clearMessages();
                   }}
                   placeholder="Esim. Helsinki"
                   className="mt-2 h-11 w-full rounded-lg border border-gray-300 px-4 outline-none transition focus:border-gray-500 focus:ring-2 focus:ring-gray-200"
@@ -394,11 +664,12 @@ function Profile() {
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900">
-                  Osaaminen
+                  Osaaminen *
                 </h2>
 
                 <p className="mt-2 text-sm text-gray-500">
-                  Valitse teknologiat ja taidot, joita osaat.
+                  Valitse teknologiat ja taidot,
+                  joita osaat.
                 </p>
               </div>
 
@@ -409,13 +680,16 @@ function Profile() {
 
             <div className="mt-5 flex flex-wrap gap-2">
               {availableSkills.map((skill) => {
-                const selected = skills.includes(skill);
+                const selected =
+                  skills.includes(skill);
 
                 return (
                   <button
                     key={skill}
                     type="button"
-                    onClick={() => toggleSkill(skill)}
+                    onClick={() =>
+                      toggleSkill(skill)
+                    }
                     className={`rounded-lg border px-3 py-2 text-sm font-medium transition ${
                       selected
                         ? "border-gray-900 bg-gray-900 text-white"
@@ -449,22 +723,22 @@ function Profile() {
             )}
           </section>
 
-          {/* KIINNOSTUKSET */}
+          {/* INTERESTS */}
 
           <section className="rounded-xl border border-gray-200 bg-white p-6">
             <h2 className="text-xl font-bold text-gray-900">
-              Millaisia paikkoja etsit?
+              Millaisia paikkoja etsit? *
             </h2>
 
             <p className="mt-2 text-sm text-gray-500">
-              Valitse työpaikkatyypit, joista olet kiinnostunut.
+              Valitse työpaikkatyypit, joista olet
+              kiinnostunut.
             </p>
 
             <div className="mt-5 space-y-3">
               {interestOptions.map((option) => {
-                const selected = interests.includes(
-                  option.value
-                );
+                const selected =
+                  interests.includes(option.value);
 
                 return (
                   <label
@@ -479,7 +753,9 @@ function Profile() {
                       type="checkbox"
                       checked={selected}
                       onChange={() =>
-                        toggleInterest(option.value)
+                        toggleInterest(
+                          option.value
+                        )
                       }
                       className="h-4 w-4"
                     />
@@ -497,8 +773,7 @@ function Profile() {
 
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-gray-500">
-              Täytä profiilisi mahdollisimman tarkasti, jotta
-              työpaikkojen matchaus toimii paremmin.
+              * Pakollinen tieto
             </p>
 
             <button

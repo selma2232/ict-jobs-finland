@@ -1,4 +1,9 @@
-import { Router, type Request, type Response, type NextFunction } from "express";
+import {
+  Router,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { prisma } from "../lib/prisma";
@@ -13,6 +18,12 @@ if (!JWT_SECRET) {
 
 interface AuthRequest extends Request {
   userId?: string;
+  userEmail?: string;
+}
+
+interface JwtPayload {
+  userId: string;
+  email: string;
 }
 
 function authenticateToken(
@@ -29,9 +40,9 @@ function authenticateToken(
     return;
   }
 
-  const token = authHeader.split(" ")[1];
+  const [scheme, token] = authHeader.split(" ");
 
-  if (!token) {
+  if (scheme !== "Bearer" || !token) {
     res.status(401).json({
       message: "Invalid authorization header",
     });
@@ -39,46 +50,127 @@ function authenticateToken(
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET as string) as unknown as {
-      userId: string;
-      email: string;
-    };
+    const decoded = jwt.verify(
+      token,
+      JWT_SECRET as string
+    ) as unknown as JwtPayload;
+
+    if (
+      !decoded ||
+      typeof decoded.userId !== "string" ||
+      typeof decoded.email !== "string"
+    ) {
+      res.status(401).json({
+        message: "Invalid token",
+      });
+      return;
+    }
 
     req.userId = decoded.userId;
+    req.userEmail = decoded.email;
 
     next();
   } catch (error) {
-    console.error(error);
+    if (
+      error instanceof jwt.TokenExpiredError
+    ) {
+      res.status(401).json({
+        message: "Token expired",
+      });
+      return;
+    }
 
     res.status(401).json({
-      message: "Invalid or expired token",
+      message: "Invalid token",
     });
   }
 }
 
+/*
+ * REGISTER
+ * POST /api/auth/register
+ */
 router.post("/register", async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const name =
+      typeof req.body.name === "string"
+        ? req.body.name.trim()
+        : "";
+
+    const email =
+      typeof req.body.email === "string"
+        ? req.body.email.trim().toLowerCase()
+        : "";
+
+    const password =
+      typeof req.body.password === "string"
+        ? req.body.password
+        : "";
 
     if (!name || !email || !password) {
       res.status(400).json({
-        message: "Name, email and password are required",
+        message:
+          "Nimi, sähköposti ja salasana ovat pakollisia.",
+      });
+      return;
+    }
+
+    if (name.length > 100) {
+      res.status(400).json({
+        message: "Nimi on liian pitkä.",
+      });
+      return;
+    }
+
+    if (email.length > 255) {
+      res.status(400).json({
+        message: "Sähköposti on liian pitkä.",
+      });
+      return;
+    }
+
+    const emailIsValid =
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+    if (!emailIsValid) {
+      res.status(400).json({
+        message: "Anna kelvollinen sähköpostiosoite.",
+      });
+      return;
+    }
+
+    if (password.length < 8) {
+      res.status(400).json({
+        message:
+          "Salasanan tulee olla vähintään 8 merkkiä pitkä.",
+      });
+      return;
+    }
+
+    if (password.length > 100) {
+      res.status(400).json({
+        message: "Salasana on liian pitkä.",
       });
       return;
     }
 
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: {
+        email,
+      },
     });
 
     if (existingUser) {
       res.status(409).json({
-        message: "User already exists",
+        message: "Tällä sähköpostiosoitteella on jo käyttäjä.",
       });
       return;
     }
 
-    const hashedPassword = await bcrypt.hash(password, 12);
+    const hashedPassword = await bcrypt.hash(
+      password,
+      12
+    );
 
     const user = await prisma.user.create({
       data: {
@@ -96,34 +188,47 @@ router.post("/register", async (req, res) => {
 
     res.status(201).json(user);
   } catch (error) {
-    console.error(error);
+    console.error("REGISTER ERROR:", error);
 
     res.status(500).json({
-      message: "Failed to register user",
+      message: "Rekisteröityminen epäonnistui.",
     });
   }
 });
 
+/*
+ * LOGIN
+ * POST /api/auth/login
+ */
 router.post("/login", async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const email =
+      typeof req.body.email === "string"
+        ? req.body.email.trim().toLowerCase()
+        : "";
+
+    const password =
+      typeof req.body.password === "string"
+        ? req.body.password
+        : "";
 
     if (!email || !password) {
       res.status(400).json({
-        message: "Email and password are required",
+        message:
+          "Sähköposti ja salasana ovat pakollisia.",
       });
       return;
     }
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: {
+        email,
+      },
     });
 
     if (!user) {
-      console.log("LOGIN: user not found:", email);
-
       res.status(401).json({
-        message: "Invalid email or password",
+        message: "Virheellinen sähköposti tai salasana.",
       });
       return;
     }
@@ -134,10 +239,8 @@ router.post("/login", async (req, res) => {
     );
 
     if (!passwordMatches) {
-      console.log("LOGIN: password does not match:", email);
-
       res.status(401).json({
-        message: "Invalid email or password",
+        message: "Virheellinen sähköposti tai salasana.",
       });
       return;
     }
@@ -162,51 +265,61 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("LOGIN ERROR:", error);
 
     res.status(500).json({
-      message: "Failed to login",
+      message: "Kirjautuminen epäonnistui.",
     });
   }
 });
 
-router.get("/me", authenticateToken, async (req: AuthRequest, res) => {
-  try {
-    if (!req.userId) {
-      res.status(401).json({
-        message: "Authentication required",
+/*
+ * CURRENT USER
+ * GET /api/auth/me
+ */
+router.get(
+  "/me",
+  authenticateToken,
+  async (req: AuthRequest, res: Response) => {
+    try {
+      if (!req.userId) {
+        res.status(401).json({
+          message: "Authentication required",
+        });
+        return;
+      }
+
+      const user = await prisma.user.findUnique({
+        where: {
+          id: req.userId,
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          createdAt: true,
+          profile: true,
+        },
       });
-      return;
-    }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        id: req.userId,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        createdAt: true,
-        profile: true,
-      },
-    });
+      if (!user) {
+        res.status(404).json({
+          message: "User not found",
+        });
+        return;
+      }
 
-    if (!user) {
-      res.status(404).json({
-        message: "User not found",
+      res.json(user);
+    } catch (error) {
+      console.error("AUTH ME ERROR:", error);
+
+      res.status(500).json({
+        message: "Käyttäjän tietojen hakeminen epäonnistui.",
       });
-      return;
     }
-
-    res.json(user);
-  } catch (error) {
-    console.error(error);
-
-    res.status(500).json({
-      message: "Failed to get current user",
-    });
   }
-});
+);
+
+export { authenticateToken };
 
 export default router;

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
+import ProtectedRoute from "./components/protectedroute";
 
 import Home from "./pages/home";
 import Jobs from "./pages/jobs";
@@ -123,17 +124,18 @@ function App() {
               element={<CompanyDetails />}
             />
 
-            {/* Profile */}
-            <Route
-              path="/profile"
-              element={<Profile />}
-            />
+            {/* Protected pages */}
+            <Route element={<ProtectedRoute />}>
+              <Route
+                path="/profile"
+                element={<Profile />}
+              />
 
-            {/* Saved jobs */}
-            <Route
-              path="/saved-jobs"
-              element={<SavedJobs />}
-            />
+              <Route
+                path="/saved-jobs"
+                element={<SavedJobs />}
+              />
+            </Route>
 
             {/* Authentication */}
             <Route
