@@ -5,6 +5,7 @@ import {
   useState,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_URL } from "../api";
 
 const availableSkills = [
   "React",
@@ -140,7 +141,7 @@ function Profile() {
         setError("");
 
         const response = await fetch(
-          "http://localhost:3000/api/profile",
+          `${API_URL}/api/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -326,7 +327,7 @@ function Profile() {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/profile",
+        `${API_URL}/api/profile`,
         {
           method: "PUT",
 

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_URL } from "../api";
 import type { Job } from "../types/job";
 import type { UserProfile } from "../types/profile";
 import { calculateJobMatch } from "../utils/jobmatch";
@@ -28,7 +29,7 @@ function JobCard({ job, profile }: JobCardProps) {
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/saved-jobs",
+          `${API_URL}/api/saved-jobs`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -71,7 +72,7 @@ function JobCard({ job, profile }: JobCardProps) {
     try {
       if (isSaved) {
         const response = await fetch(
-          `http://localhost:3000/api/saved-jobs/${job.id}`,
+          `${API_URL}/api/saved-jobs/${job.id}`,
           {
             method: "DELETE",
             headers: {
@@ -91,7 +92,7 @@ function JobCard({ job, profile }: JobCardProps) {
         setIsSaved(false);
       } else {
         const response = await fetch(
-          "http://localhost:3000/api/saved-jobs",
+          `${API_URL}/api/saved-jobs`,
           {
             method: "POST",
             headers: {

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { API_URL } from "../api";
 import JobCard from "../components/jobcard";
 import type { Job } from "../types/job";
 import type { UserProfile } from "../types/profile";
@@ -30,7 +31,7 @@ function Jobs() {
          */
 
         const jobsResponse = await fetch(
-          "http://localhost:3000/api/jobs"
+          `${API_URL}/api/jobs`
         );
 
         if (!jobsResponse.ok) {
@@ -54,7 +55,7 @@ function Jobs() {
         if (token) {
           try {
             const profileResponse = await fetch(
-              "http://localhost:3000/api/profile",
+              `${API_URL}/api/profile`,
               {
                 headers: {
                   Authorization: `Bearer ${token}`,

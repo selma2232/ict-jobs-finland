@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_URL } from "../api";
 import JobMatch from "../components/jobmatch";
 import type { UserProfile } from "../types/profile";
 import type { Job } from "../types/job";
@@ -33,7 +34,7 @@ function JobDetails() {
 
       try {
         const response = await fetch(
-          `http://localhost:3000/api/jobs/${id}`
+          `${API_URL}/api/jobs/${id}`
         );
 
         if (!response.ok) {
@@ -71,7 +72,7 @@ function JobDetails() {
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/profile",
+          `${API_URL}/api/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -130,7 +131,7 @@ function JobDetails() {
 
       try {
         const response = await fetch(
-          "http://localhost:3000/api/saved-jobs",
+          `${API_URL}/api/saved-jobs`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -191,7 +192,7 @@ function JobDetails() {
     try {
       if (saved) {
         const response = await fetch(
-          `http://localhost:3000/api/saved-jobs/${id}`,
+          `${API_URL}/api/saved-jobs/${id}`,
           {
             method: "DELETE",
             headers: {
@@ -214,7 +215,7 @@ function JobDetails() {
         setSaved(false);
       } else {
         const response = await fetch(
-          "http://localhost:3000/api/saved-jobs",
+          `${API_URL}/api/saved-jobs`,
           {
             method: "POST",
             headers: {

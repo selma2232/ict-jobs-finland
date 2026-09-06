@@ -1,5 +1,6 @@
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { API_URL } from "../api";
 import JobCard from "../components/jobcard";
 
 function CompanyDetails() {
@@ -13,7 +14,7 @@ function CompanyDetails() {
     const fetchCompany = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/api/companies/${id}`
+          `${API_URL}/api/companies/${id}`
         );
 
         if (!response.ok) {
