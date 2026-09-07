@@ -5,6 +5,7 @@ import cors from "cors";
 import jobsRouter from "./routes/jobs";
 import companiesRouter from "./routes/companies";
 import savedJobsRouter from "./routes/savedjobs";
+import applicationsRouter from "./routes/applications";
 import authRouter from "./routes/auth";
 import profileRouter from "./routes/profile";
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/api/jobs", jobsRouter);
 app.use("/api/companies", companiesRouter);
 app.use("/api/saved-jobs", savedJobsRouter);
+app.use("/api/applications", applicationsRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/profile", profileRouter);
 app.get("/api/health", (_req, res) => {

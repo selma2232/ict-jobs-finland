@@ -10,11 +10,12 @@ import JobListPage from "./pages/joblistpage";
 import CompanyDetails from "./pages/companydetails";
 import Profile from "./pages/profile";
 import SavedJobs from "./pages/savedjobs";
+import Dashboard from "./pages/dashboard";
 
 import Login from "./pages/login";
 import Register from "./pages/register";
 import JobDetails from "./pages/jobdetails";
-
+import Companies from "./pages/companies";
 function Placeholder({ title }: { title: string }) {
   return (
     <main className="mx-auto min-h-[60vh] max-w-7xl px-6 py-20">
@@ -117,7 +118,10 @@ function App() {
               path="/jobs/:id"
               element={<JobDetails />}
             />
-
+<Route
+  path="/companies"
+  element={<Companies />}
+/>
             {/* Companies */}
             <Route
               path="/companies/:id"
@@ -126,6 +130,11 @@ function App() {
 
             {/* Protected pages */}
             <Route element={<ProtectedRoute />}>
+              <Route
+                path="/dashboard"
+                element={<Dashboard />}
+              />
+
               <Route
                 path="/profile"
                 element={<Profile />}
